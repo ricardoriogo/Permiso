@@ -12,7 +12,7 @@ class CreateRolesTable extends Migration {
     */
     public function up()
     {
-        Schema::create('roles', function(Blueprint $table)
+        Schema::create(\Config::get('permiso.roles_table'), function(Blueprint $table)
         {
             $table->increments('id')->unsigned();
             $table->string('name')->unique();
@@ -21,7 +21,7 @@ class CreateRolesTable extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('permissions', function(Blueprint $table)
+        Schema::create(\Config::get('permiso.permissions_table'), function(Blueprint $table)
         {
             $table->increments('id')->unsigned();
             $table->string('name')->unique();
@@ -30,7 +30,7 @@ class CreateRolesTable extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('assigned_roles', function(Blueprint $table)
+        Schema::create(\Config::get('permiso.user_role_table'), function(Blueprint $table)
         {
             $table->integer('user_id')->unsigned();
             $table->integer('role_id')->unsigned();
@@ -44,10 +44,10 @@ class CreateRolesTable extends Migration {
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
-            $table->foreign('role_id')->references('id')->on('roles');
+            $table->foreign('role_id')->references('id')->on(\Config::get('permiso.roles_table'));
         });
 
-        Schema::create('roles_permissions', function(Blueprint $table)
+        Schema::create(\Config::get('permiso.role_permission_table'), function(Blueprint $table)
         {
             $table->integer('role_id')->unsigned();
             $table->integer('permission_id')->unsigned();
@@ -55,12 +55,12 @@ class CreateRolesTable extends Migration {
             $table->primary(array('role_id', 'permission_id'));
 
             $table->foreign('role_id')->references('id')
-                ->on('roles')
+                ->on(\Config::get('permiso.roles_table'))
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
             $table->foreign('permission_id')->references('id')
-                ->on('permissions')
+                ->on(\Config::get('permiso.permissions_table'))
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
         });
@@ -73,19 +73,19 @@ class CreateRolesTable extends Migration {
     */
     public function down()
     {
-        Schema::table('assigned_roles', function (Blueprint $table) {
-            $table->dropForeign('assigned_roles_user_id_foreign');
-            $table->dropForeign('assigned_roles_role_id_foreign');
+        Schema::table(\Config::get('permiso.user_role_table'), function (Blueprint $table) {
+            $table->dropForeign(\Config::get('permiso.user_role_table') . '_user_id_foreign');
+            $table->dropForeign(\Config::get('permiso.user_role_table') . '_role_id_foreign');
         });
 
-        Schema::table('roles_permissions', function (Blueprint $table) {
-            $table->dropForeign('roles_permissions_role_id_foreign');
-            $table->dropForeign('roles_permissions_permission_id_foreign');
+        Schema::table(\Config::get('permiso.role_permission_table'), function (Blueprint $table) {
+            $table->dropForeign(\Config::get('permiso.role_permission_table') . '_role_id_foreign');
+            $table->dropForeign(\Config::get('permiso.role_permission_table') . '_permission_id_foreign');
         });
 
-        Schema::drop('assigned_roles');
-        Schema::drop('roles_permissions');
-        Schema::drop('roles');
-        Schema::drop('permissions');
+        Schema::drop(\Config::get('permiso.user_role_table'));
+        Schema::drop(\Config::get('permiso.role_permission_table'));
+        Schema::drop(\Config::get('permiso.roles_table'));
+        Schema::drop(\Config::get('permiso.permissions_table'));
     }
 }

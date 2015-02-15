@@ -16,7 +16,7 @@ class Role extends Model {
      */
     public function users()
     {
-        return $this->belongsToMany(Config::get('auth.model'), 'assigned_roles', 'role_id', 'user_id');
+        return $this->belongsToMany(Config::get('auth.model'), \Config::get('permiso.user_role_table'), 'role_id', 'user_id');
     }
 
     /**
@@ -26,6 +26,6 @@ class Role extends Model {
      */
     public function permissions()
     {
-        return $this->belongsToMany('Riogo\\Permiso\\Permission', 'roles_permissions', 'role_id', 'permission_id');
+        return $this->belongsToMany(\Config::get('permiso.permission_model'), \Config::get('permiso.role_permission_table'), 'role_id', 'permission_id');
     }
 }

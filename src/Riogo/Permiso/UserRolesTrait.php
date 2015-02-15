@@ -14,6 +14,6 @@ trait UserRolesTrait {
 	 */
 	public function roles()
 	{
-		return $this->belongsToMany('Riogo\Permiso\Role', 'assigned_roles', 'user_id', 'role_id');
+		return $this->belongsToMany(\Config::get('permiso.role_model'), \Config::get('permiso.user_role_table'), 'user_id', 'role_id');
 	}
 }

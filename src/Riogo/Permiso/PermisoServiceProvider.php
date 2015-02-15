@@ -12,6 +12,11 @@ class PermisoServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
+		$this->publishes([
+			__DIR__.'/../../config/permiso.php' => config_path('permiso.php'),
+         ]);
+
+
 		\Auth::extend('permiso', function() {
 			$model = \Config::get('auth.model');
 			$provider = new \Illuminate\Auth\EloquentUserProvider(\App::make('hash'), $model);
@@ -31,6 +36,21 @@ class PermisoServiceProvider extends ServiceProvider {
 		$this->app->bindShared('command.permiso.migration', function ($app) {
 			return new MigrationCommand();
 		});
+
+		$this->mergeConfigFrom(
+			__DIR__.'/../../config/permiso.php', 'permiso'
+        );
 	}
 
+	/**
+      * Get the services provided.
+      *
+      * @return array
+      */
+     public function provides()
+     {
+         return array(
+             'command.permiso.migration'
+         );
+     }
 }
