@@ -1,6 +1,7 @@
 <?php namespace Riogo\Permiso;
 
 use Illuminate\Support\ServiceProvider;
+use Riogo\Permiso\Commands\MigrationCommand;
 
 class PermisoServiceProvider extends ServiceProvider {
 
@@ -16,6 +17,8 @@ class PermisoServiceProvider extends ServiceProvider {
 			$provider = new \Illuminate\Auth\EloquentUserProvider(\App::make('hash'), $model);
 			return new PermisoGuard($provider, \App::make('session.store'));
 		});
+
+		$this->commands('command.permiso.migration');
 	}
 
 	/**
@@ -25,7 +28,9 @@ class PermisoServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		$this->app->bindShared('command.permiso.migration', function ($app) {
+			return new MigrationCommand();
+		});
 	}
 
 }
