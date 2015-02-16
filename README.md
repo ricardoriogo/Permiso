@@ -2,7 +2,7 @@
 A simple Laravel 5 package for Role-based permissions.
 
 ## Instalation
-### Add to composer.json
+### 1. Add to composer.json
 In the `require` key of `composer.json` file add the following:
 
     "ricardoriogo/permiso": "dev-master"
@@ -11,26 +11,33 @@ Run composer update command.
     
     $ composer update
 
-### Register Service Provider
+### 2. Register Service Provider
 In `config/app.php` add `Riogo\Permiso\PermisoServiceProvider` to the end of `$providers` array.
 
 ```php
-
     'providers' => array(
 		'App\Providers\EventServiceProvider',
 		'App\Providers\RouteServiceProvider',
         ...
         'Riogo\Permiso\PermisoServiceProvider',
     ),
-    
 ```
 
-### Change Auth configuration
+### 3. Change Auth configuration
 In `config/auth.php` change the `driver` configuration to `permiso`.
 Permiso will use `App\User` model by default. You will need to change `model` configuration on `config/auth.php` if you're using another model for authentication.
 
+### 4. Add UserRoleTrait to your auth model
+In your auth model add the __UserRoleTrait__ trait. By default __App\User__ is the model used for authentication.
+```php    
+    class User extends Model implements AuthenticatableContract, CanResetPasswordContract {
+        
+        use Riogo\Permiso\UserRolesTrait
+        ...
+    }    
+```
 
-### Run Migrations
+### 5. Run Migrations
 To create the migration file for roles and permissions tables use the command:
 
     $ php artisan permiso:migration
