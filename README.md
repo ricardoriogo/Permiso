@@ -1,4 +1,8 @@
-# Permiso
+# Permiso 
+--------------------------------------
+
+[![Build Status](https://travis-ci.org/ricardoriogo/Permiso.svg?branch=master)](https://travis-ci.org/ricardoriogo/Permiso)
+
 A simple Laravel 5 package for Role-based permissions.
 
 ## Instalation
