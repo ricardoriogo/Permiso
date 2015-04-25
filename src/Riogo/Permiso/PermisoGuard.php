@@ -148,10 +148,20 @@ class PermisoGuard extends Guard {
             $user = $this->user()->load('roles.permissions');
 
             $this->roles = $user->roles->lists('name');
+            
+            if($this->roles instanceof \Illuminate\Database\Eloquent\Collection){
+                $this->roles = $this->roles->toArray();
+            }
 
             $user->roles->each(function($role)
             {
-                $this->permissions = array_merge($this->permissions, $role->permissions->lists('name'));
+                $p = $role->permissions->lists('name');
+                
+                if($p instanceof \Illuminate\Database\Eloquent\Collection) {
+                    $p = $p->toArray();
+                }
+                
+                $this->permissions = array_merge($this->permissions, $p);
             });
 
             $this->session->put([
