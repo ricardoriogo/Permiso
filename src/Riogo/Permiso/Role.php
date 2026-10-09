@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Config;
 class Role extends Model {
 
     /**
-     * Define the users relationship, this uses config auth.model to define the auth model class name.
+     * Define the users relationship, this uses config auth.providers.users.model to define the auth model class name.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function users()
     {
-        return $this->belongsToMany(Config::get('auth.model'), \Config::get('permiso.user_role_table'), 'role_id', 'user_id');
+        return $this->belongsToMany(Config::get('auth.providers.users.model'), \Config::get('permiso.user_role_table'), 'role_id', 'user_id');
     }
 
     /**

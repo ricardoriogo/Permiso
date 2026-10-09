@@ -32,15 +32,15 @@ class PermisoTables extends Migration {
 
         Schema::create(\Config::get('permiso.user_role_table'), function(Blueprint $table)
         {
-            $table->integer('user_id')->unsigned();
+            $table->unsignedBigInteger('user_id');
             $table->integer('role_id')->unsigned();
 
             $table->primary(array('user_id', 'role_id'));
 
-            $userModel   = \Config::get('auth.model');
-            $userKeyName = (new $userModel())->getKeyName();
-            $table->foreign('user_id')->references($userKeyName)
-                ->on(\Config::get('auth.table'))
+            $userModel   = \Config::get('auth.providers.users.model');
+            $user        = new $userModel();
+            $table->foreign('user_id')->references($user->getKeyName())
+                ->on($user->getTable())
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 

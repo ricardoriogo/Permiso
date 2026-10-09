@@ -35,7 +35,7 @@ class MigrationCommand extends Command {
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
         $this->info('This command will create the migrations requested for Permiso.');
 

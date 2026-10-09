@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/ricardoriogo/Permiso.svg?branch=master)](https://travis-ci.org/ricardoriogo/Permiso)
 
-A simple Laravel 5 package for Role-based permissions.
+A simple Laravel 5.6+ (including 6) package for Role-based permissions.
 
 ## Instalation
 ### 1. Add to composer.json
@@ -28,15 +28,24 @@ In `config/app.php` add `Riogo\Permiso\PermisoServiceProvider` to the end of `$p
 ```
 
 ### 3. Change Auth configuration
-In `config/auth.php` change the `driver` configuration to `permiso`.
-Permiso will use `App\User` model by default. You will need to change `model` configuration on `config/auth.php` if you're using another model for authentication.
+In `config/auth.php` set the `driver` of your guard to `permiso`, for example:
+
+```php
+    'guards' => [
+        'web' => [
+            'driver' => 'permiso',
+            'provider' => 'users',
+        ],
+    ],
+```
+Permiso uses the model configured in `auth.providers.users.model` (`App\User` by default).
 
 ### 4. Add UserRoleTrait to your auth model
 In your auth model add the __UserRoleTrait__ trait. By default __App\User__ is the model used for authentication.
 ```php    
-    class User extends Model implements AuthenticatableContract, CanResetPasswordContract {
+    class User extends Authenticatable {
         
-        use Riogo\Permiso\UserRolesTrait
+        use Riogo\Permiso\UserRolesTrait;
         ...
     }    
 ```

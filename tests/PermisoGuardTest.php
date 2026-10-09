@@ -6,17 +6,18 @@ use Mockery as m;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 
-class PermisoGuardTest extends PHPUnit_Framework_TestCase
+class PermisoGuardTest extends \PHPUnit\Framework\TestCase
 {
-    public function tearDown()
+    public function tearDown(): void
     {
         m::close();
+        parent::tearDown();
     }
 
     /**
      * Initialize PermisoGuard
      *
-     * @return PermisoGuard
+     * @return PermisoGuardAlias
      */
     public function getProvider()
     {
@@ -24,18 +25,15 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
         $hasher = m::mock('\Illuminate\Contracts\Hashing\Hasher');
         $provider = new \Illuminate\Auth\EloquentUserProvider($hasher, $model);
 
-        $session = m::mock('\Symfony\Component\HttpFoundation\Session\SessionInterface');
-        $session->shouldReceive('has')->andReturn(true);
-        $session->shouldReceive('get')->with('roles')->andReturn(['admin', 'member', 'another_role_extensive_name_ok']);
-        $session->shouldReceive('get')->with('permissions')->andReturn(['user.delete', 'post.view']);
+        $session = m::mock('\Illuminate\Contracts\Session\Session');
 
-        return new PermisoGuard($provider, $session);
+        return new PermisoGuardAlias('web', $provider, $session);
     }
 
     /**
      * Setup database connection for tests
      */
-    public function setUp()
+    public function setUp(): void
     {
         /*
          * Setup connection with sqlite
@@ -88,7 +86,7 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
 
             $table->primary(array('user_id', 'role_id'));
 
-            $table->foreign('user_id')->references('user_id')
+            $table->foreign('user_id')->references('id')
                 ->on('users')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
@@ -134,6 +132,18 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
         $permission = new \Riogo\Permiso\Permission();
         $permission->name = 'user.list';
         $role->permissions()->save($permission);
+
+        $role = new \Riogo\Permiso\Role();
+        $role->name = 'member';
+        $role = $user->roles()->save($role);
+
+        $permission = new \Riogo\Permiso\Permission();
+        $permission->name = 'post.view';
+        $role->permissions()->save($permission);
+
+        $role = new \Riogo\Permiso\Role();
+        $role->name = 'another_role_extensive_name_ok';
+        $user->roles()->save($role);
     }
 
     public function testHasRole()
@@ -159,7 +169,9 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($permiso->isAnotherRole());
         $this->assertFalse($permiso->isAnotherRoleExtensiveName());
         $this->assertTrue($permiso->isAnotherRoleExtensiveNameOk());
-        $this->assertFalse($permiso->callAnotherThing());
+
+        $this->expectException(\BadMethodCallException::class);
+        $permiso->callAnotherThing();
     }
 
     public function testHasMoreThanOneRole()
@@ -205,15 +217,10 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
         $hasher = m::mock('\Illuminate\Contracts\Hashing\Hasher');
         $provider = new \Illuminate\Auth\EloquentUserProvider($hasher, $model);
 
-        $session = m::mock('\Symfony\Component\HttpFoundation\Session\SessionInterface');
-        $session->shouldReceive('has')->andReturn(true);
-        $session->shouldReceive('get')->with('roles')->andReturn(['admin', 'member', 'another_role_extensive_name_ok']);
-        $session->shouldReceive('get')->with('permissions')->andReturn(['user.delete', 'post.view']);
-        $session->shouldReceive('remove')->with(\Mockery::any())->andReturn(true);
-        $session->shouldReceive('remove')->with('roles')->andReturn(true);
-        $session->shouldReceive('remove')->with('permissions')->andReturn(true);
+        $session = m::mock('\Illuminate\Contracts\Session\Session');
+        $session->shouldReceive('remove')->andReturn(true);
 
-        $permiso = new PermisoGuardAlias($provider, $session);
+        $permiso = new PermisoGuardAlias('web', $provider, $session);
 
         $cookie = m::mock('\Illuminate\Contracts\Cookie\QueueingFactory');
         $cookie->shouldReceive('forget', 'queue')->andReturn(true);
@@ -235,17 +242,16 @@ class PermisoGuardTest extends PHPUnit_Framework_TestCase
         $hasher = m::mock('\Illuminate\Contracts\Hashing\Hasher');
         $provider = new \Illuminate\Auth\EloquentUserProvider($hasher, $model);
 
-        $session = m::mock('\Symfony\Component\HttpFoundation\Session\SessionInterface');
-        $session->shouldReceive('has')->andReturn(false);
-        $session->shouldReceive('put')->with(m::any())->andReturn(true);
+        $session = m::mock('\Illuminate\Contracts\Session\Session');
+        $session->shouldReceive('remove')->andReturn(true);
 
-        $permiso = new PermisoGuardAlias($provider, $session);
+        $permiso = new PermisoGuardAlias('web', $provider, $session);
 
         // Assertion
         $this->assertTrue($permiso->isAdmin());
-        $this->assertFalse($permiso->checkAll()->can('user.delete, post.view'));
+        $this->assertFalse($permiso->checkAll()->can('user.delete, post.destroy'));
         $this->assertTrue($permiso->checkAll()->can('user.delete, user.list'));
-        $this->assertSame(['admin'], $permiso->get('roles'));
-        $this->assertSame(['user.delete', 'user.list'], $permiso->get('permissions'));
+        $this->assertSame(['admin', 'member', 'another_role_extensive_name_ok'], $permiso->get('roles'));
+        $this->assertEqualsCanonicalizing(['user.delete', 'user.list', 'post.view'], $permiso->get('permissions'));
     }
 }

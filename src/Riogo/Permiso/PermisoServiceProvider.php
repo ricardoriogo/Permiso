@@ -17,10 +17,16 @@ class PermisoServiceProvider extends ServiceProvider {
          ]);
 
 
-		\Auth::extend('permiso', function() {
-			$model = \Config::get('auth.model');
-			$provider = new \Illuminate\Auth\EloquentUserProvider(\App::make('hash'), $model);
-			return new PermisoGuard($provider, \App::make('session.store'));
+		\Auth::extend('permiso', function ($app, $name, array $config) {
+			$provider = $app['auth']->createUserProvider($config['provider'] ?? null);
+
+			$guard = new PermisoGuard($name, $provider, $app['session.store'], $app['request']);
+
+			$guard->setCookieJar($app['cookie']);
+			$guard->setDispatcher($app['events']);
+			$guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+
+			return $guard;
 		});
 
 		$this->commands('command.permiso.migration');

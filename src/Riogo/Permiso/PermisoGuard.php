@@ -1,9 +1,9 @@
 <?php namespace Riogo\Permiso;
 
-use Illuminate\Auth\Guard;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Session;
 
-class PermisoGuard extends Guard {
+class PermisoGuard extends SessionGuard {
 
     /**
      * @var array Array of roles of Authenticated user
@@ -67,7 +67,7 @@ class PermisoGuard extends Guard {
                 $this->decamelize(substr($method, 2))
             );
         }
-        return false;
+        return parent::__call($method, $arguments);
     }
 
     /**
@@ -143,27 +143,21 @@ class PermisoGuard extends Guard {
             $this->permissions = [];
             
             $user = $this->user();
-            $this->roles = $user->roles->lists('name');
-            if($this->roles instanceof \Illuminate\Database\Eloquent\Collection){
-                $this->roles = $this->roles->toArray();
+            $this->roles = [];
+            if (!$user) {
+                return;
             }
-            
-            $role_id = $this->user()->roles[0]->id;
-        
-            $permissions =  \DB::table('role_permission')
-                ->join('permissions', 'role_permission.permission_id', '=', 'permissions.id')
-                //->join('orders', 'users.id', '=', 'orders.user_id')
-                ->select('permissions.name')
-                    ->where('role_id', $role_id)
-                ->get('name');
-            $permissions_array = [];
-            foreach($permissions as $permission)
-            {
-                array_push($permissions_array,$permission->name);
 
-            };
-            
-            $this->permissions = $permissions_array;
+            $roles = $user->roles;
+            $this->roles = $roles->pluck('name')->all();
+
+            $this->permissions = $roles->load('permissions')
+                ->pluck('permissions')
+                ->flatten()
+                ->pluck('name')
+                ->unique()
+                ->values()
+                ->all();
         
     }
 
